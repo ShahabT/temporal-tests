@@ -70,7 +70,7 @@ var Experiments = map[string]Experiment{
 		ConcurrentActivities:      4,
 		Stages: []Stage{
 			{
-				StartWorkflowPerSec: 40,
+				StartWorkflowPerSec: 36,
 				Duration:            3 * time.Minute,
 			},
 		},

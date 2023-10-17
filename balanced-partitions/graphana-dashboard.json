@@ -23,7 +23,7 @@
   },
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
+  "graphTooltip": 1,
   "id": 13,
   "links": [],
   "liveNow": false,
@@ -196,7 +196,7 @@
               "tooltip": false,
               "viz": false
             },
-            "lineInterpolation": "linear",
+            "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 5,
             "scaleDistribution": {
@@ -235,218 +235,6 @@
         "x": 12,
         "y": 0
       },
-      "id": 23,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "P911AE79A5C1FB33B"
-          },
-          "editorMode": "code",
-          "expr": "sum by(taskqueue) (rate(poll_latency_count{namespace=\"backlog_exp\", task_type=\"Activity\", taskqueue!~\"(tq|temporal_sys_per_ns_tq)\"}[1m]))",
-          "hide": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "P911AE79A5C1FB33B"
-          },
-          "editorMode": "code",
-          "expr": "sum (rate(poll_latency_count{namespace=\"backlog_exp\", task_type=\"Activity\", taskqueue=\"tq\"}[1m])) \n-\n(sum (rate(poll_latency_count{namespace=\"backlog_exp\", task_type=\"Activity\", taskqueue!~\"temporal_sys_per_ns_tq\", duplicate=\"true\"}[1m])) or on() vector(0))",
-          "hide": false,
-          "legendFormat": "tq",
-          "range": true,
-          "refId": "E"
-        }
-      ],
-      "title": "incoming pollers per prtn",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "P911AE79A5C1FB33B"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 8
-      },
-      "id": 17,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "P911AE79A5C1FB33B"
-          },
-          "editorMode": "code",
-          "expr": "sum(rate(poll_latency_sum{namespace=\"backlog_exp\", task_type=\"Activity\", taskqueue!~\"temporal_sys_per_ns_tq\", duplicate=\"false\"}[1m])) by (taskqueue)/\nsum(rate(poll_latency_count{namespace=\"backlog_exp\", task_type=\"Activity\", taskqueue!~\"temporal_sys_per_ns_tq\", duplicate=\"false\"}[1m])) by (taskqueue)",
-          "hide": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "P911AE79A5C1FB33B"
-          },
-          "editorMode": "code",
-          "expr": "sum(rate(poll_timeouts{namespace=\"backlog_exp\", taskqueue!~\"temporal_sys_per_ns_tq\"}[10s])) by (taskqueue, task_type)",
-          "hide": true,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "B"
-        }
-      ],
-      "title": "Activity poll latency",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "P911AE79A5C1FB33B"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 8
-      },
       "id": 24,
       "options": {
         "legend": {
@@ -467,7 +255,7 @@
             "uid": "P911AE79A5C1FB33B"
           },
           "editorMode": "code",
-          "expr": "sum by(taskqueue) (rate(poll_latency_count{namespace=\"backlog_exp\", task_type=\"Activity\", taskqueue!~\"temporal_sys_per_ns_tq\", duplicate=\"false\"}[1m]))",
+          "expr": "sum by(taskqueue) (rate(poll_latency_count{namespace=\"backlog_exp\", task_type=\"Activity\", taskqueue!~\"(tq|temporal_sys_per_ns_tq)\", forwarded=\"false\"}[1m]))",
           "hide": false,
           "legendFormat": "__auto",
           "range": true,
@@ -479,23 +267,11 @@
             "uid": "P911AE79A5C1FB33B"
           },
           "editorMode": "code",
-          "expr": "sum (rate(poll_latency_count{namespace=\"backlog_exp\", task_type=\"Activity\", taskqueue=\"tq\"}[1m])) -\nsum (rate(poll_latency_count{namespace=\"backlog_exp\", task_type=\"Activity\", taskqueue!~\"temporal_sys_per_ns_tq\", duplicate=\"true\"}[1m]))",
-          "hide": true,
+          "expr": "sum (rate(poll_latency_count{namespace=\"backlog_exp\", task_type=\"Activity\", taskqueue=\"tq\"}[1m]))  or on() vector(0) +\nsum (rate(poll_latency_count{namespace=\"backlog_exp\", task_type=\"Activity\", taskqueue!~\"temporal_sys_per_ns_tq\", forwarded=\"true\"}[1m]))  or on() vector(0)",
+          "hide": false,
           "legendFormat": "tq",
           "range": true,
           "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "P911AE79A5C1FB33B"
-          },
-          "editorMode": "code",
-          "expr": "rate(poll_latency_count{namespace=\"backlog_exp\", task_type=\"Activity\", taskqueue!~\"temporal_sys_per_ns_tq\", duplicate=\"false\"}[1m])",
-          "hide": true,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "C"
         }
       ],
       "title": "Matched pollers per prtn",
@@ -571,6 +347,31 @@
                 }
               }
             ]
+          },
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "{operation=\"StartWorkflowExecution\"}",
+                  "{task_type=\"Activity\"}"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
           }
         ]
       },
@@ -578,7 +379,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 16
+        "y": 8
       },
       "id": 14,
       "options": {
@@ -605,9 +406,114 @@
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P911AE79A5C1FB33B"
+          },
+          "editorMode": "code",
+          "expr": "sum by(operation) (rate(service_latency_count{operation=\"StartWorkflowExecution\", namespace=\"backlog_exp\", service_name=\"frontend\"}[10s]))",
+          "hide": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "B"
         }
       ],
       "title": "Task dispatch rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P911AE79A5C1FB33B"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 25,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 19,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P911AE79A5C1FB33B"
+          },
+          "editorMode": "code",
+          "expr": "rate(poll_success{namespace=\"backlog_exp\", taskqueue!~\"temporal_sys.*\", task_type=\"Activity\"}[10s])",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "poll succeed/s",
       "type": "timeseries"
     },
     {
@@ -670,7 +576,7 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
+        "x": 0,
         "y": 16
       },
       "id": 7,
@@ -763,8 +669,8 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 0,
-        "y": 24
+        "x": 12,
+        "y": 16
       },
       "id": 8,
       "options": {
@@ -786,7 +692,7 @@
             "uid": "P911AE79A5C1FB33B"
           },
           "editorMode": "code",
-          "expr": "sum(rate(task_dispatch_latency_count{namespace=~\"backlog_exp\", task_type=\"Activity\", source=\"History\"}[10s]))\n/\nsum(rate(task_dispatch_latency_count{namespace=~\"backlog_exp\", task_type=\"Activity\"}[10s]))",
+          "expr": "sum(rate(task_dispatch_latency_count{namespace=~\"backlog_exp\", task_type=\"Activity\", source=~\"(Unspecified|History)\"}[10s]))\n/\nsum(rate(task_dispatch_latency_count{namespace=~\"backlog_exp\", task_type=\"Activity\"}[10s]))",
           "hide": false,
           "legendFormat": "history match rate",
           "range": true,
@@ -803,114 +709,9 @@
           "legendFormat": "sync match rate",
           "range": true,
           "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "P911AE79A5C1FB33B"
-          },
-          "editorMode": "code",
-          "expr": "rate(poll_success_sync{namespace=~\"backlog_exp\", taskqueue=~\".*tq.*\", task_type=\"Activity\"}[10s])\n",
-          "hide": true,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "C"
         }
       ],
       "title": "Sync match rate",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "P911AE79A5C1FB33B"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 25,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 24
-      },
-      "id": 19,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "P911AE79A5C1FB33B"
-          },
-          "editorMode": "code",
-          "expr": "rate(poll_success{namespace=\"backlog_exp\", taskqueue!~\"temporal_sys.*\", task_type=\"Activity\"}[10s])",
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "poll succeed/s",
       "type": "timeseries"
     },
     {
@@ -974,7 +775,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 32
+        "y": 24
       },
       "id": 9,
       "options": {
@@ -1066,7 +867,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 32
+        "y": 24
       },
       "id": 13,
       "options": {
@@ -1155,7 +956,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1170,7 +972,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 40
+        "y": 32
       },
       "id": 22,
       "options": {
@@ -1246,7 +1048,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1261,7 +1064,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 40
+        "y": 32
       },
       "id": 4,
       "options": {
@@ -1297,6 +1100,7 @@
         "type": "prometheus",
         "uid": "P911AE79A5C1FB33B"
       },
+      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1337,7 +1141,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1352,9 +1157,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 48
+        "y": 40
       },
-      "id": 20,
+      "id": 23,
       "options": {
         "legend": {
           "calcs": [],
@@ -1374,8 +1179,9 @@
             "uid": "P911AE79A5C1FB33B"
           },
           "editorMode": "code",
-          "expr": "sum(rate(syncmatch_latency_count{namespace=~\"backlog_exp\", operation=\"AddActivityTask\"}[10s])) by (taskqueue)",
-          "legendFormat": "Sync {{taskqueue}}",
+          "expr": "sum by(taskqueue) (rate(poll_latency_count{namespace=\"backlog_exp\", task_type=\"Activity\", taskqueue!~\"temporal_sys_per_ns_tq\"}[1m]))",
+          "hide": false,
+          "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         },
@@ -1385,14 +1191,14 @@
             "uid": "P911AE79A5C1FB33B"
           },
           "editorMode": "code",
-          "expr": "sum(rate(asyncmatch_latency_count{namespace=~\"backlog_exp\", operation=\"PollActivityTaskQueue\"}[10s])) by (taskqueue)",
-          "hide": false,
-          "legendFormat": "Async {{taskqueue}}",
+          "expr": "sum (rate(poll_latency_count{namespace=\"backlog_exp\", task_type=\"Activity\", taskqueue=\"tq\"}[1m])) \n-\n(sum (rate(poll_latency_count{namespace=\"backlog_exp\", task_type=\"Activity\", taskqueue!~\"temporal_sys_per_ns_tq\", forwarded=\"true\"}[1m])) or on() vector(0))",
+          "hide": true,
+          "legendFormat": "tq",
           "range": true,
-          "refId": "B"
+          "refId": "E"
         }
       ],
-      "title": "Sync/async match reported",
+      "title": "incoming pollers per prtn",
       "type": "timeseries"
     },
     {
@@ -1440,7 +1246,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1455,7 +1262,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 48
+        "y": 40
       },
       "id": 18,
       "options": {
@@ -1484,6 +1291,124 @@
         }
       ],
       "title": "Dispatched tasks per source",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P911AE79A5C1FB33B"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 48
+      },
+      "id": 17,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P911AE79A5C1FB33B"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(poll_latency_sum{namespace=\"backlog_exp\", task_type=\"Activity\", taskqueue!~\"temporal_sys_per_ns_tq\"}[1m])) by (taskqueue, forwarded)/\nsum(rate(poll_latency_count{namespace=\"backlog_exp\", task_type=\"Activity\", taskqueue!~\"temporal_sys_per_ns_tq\"}[1m])) by (taskqueue, forwarded)",
+          "hide": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P911AE79A5C1FB33B"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(poll_timeouts{namespace=\"backlog_exp\", taskqueue!~\"temporal_sys_per_ns_tq\"}[10s])) by (taskqueue, task_type)",
+          "hide": true,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P911AE79A5C1FB33B"
+          },
+          "editorMode": "code",
+          "expr": "poll_latency_count\n",
+          "hide": true,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "C"
+        }
+      ],
+      "title": "Activity poll latency",
       "type": "timeseries"
     },
     {
@@ -1531,7 +1456,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1546,7 +1472,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 56
+        "y": 48
       },
       "id": 6,
       "options": {
@@ -1622,7 +1548,112 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 56
+      },
+      "id": 20,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P911AE79A5C1FB33B"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(syncmatch_latency_count{namespace=~\"backlog_exp\", operation=\"AddActivityTask\"}[10s])) by (taskqueue)",
+          "legendFormat": "Sync {{taskqueue}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P911AE79A5C1FB33B"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(asyncmatch_latency_count{namespace=~\"backlog_exp\", operation=\"PollActivityTaskQueue\"}[10s])) by (taskqueue)",
+          "hide": false,
+          "legendFormat": "Async {{taskqueue}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Sync/async match reported",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P911AE79A5C1FB33B"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1637,7 +1668,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 64
+        "y": 56
       },
       "id": 15,
       "options": {
@@ -1713,7 +1744,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1728,7 +1760,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 72
+        "y": 64
       },
       "id": 21,
       "options": {
@@ -1768,13 +1800,13 @@
     "list": []
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Partitions and Backlog Experiment",
   "uid": "AhMmWPmSk",
-  "version": 18,
+  "version": 21,
   "weekStart": ""
 }
