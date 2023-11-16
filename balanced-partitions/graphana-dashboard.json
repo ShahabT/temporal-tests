@@ -889,7 +889,7 @@
             "uid": "P911AE79A5C1FB33B"
           },
           "editorMode": "code",
-          "expr": "sum(rate(local_to_local_matches{namespace=~\"backlog_exp\", operation=\"PollActivityTaskQueue\",taskqueue=~\"__sys_tq_.*\"}[10s]))",
+          "expr": "sum(rate(local_to_local_matches{namespace=~\"backlog_exp\", task_type=\"Activity\",taskqueue=~\"__sys_tq_.*\"}[10s]))",
           "hide": false,
           "legendFormat": "false",
           "range": true,
@@ -901,11 +901,59 @@
             "uid": "P911AE79A5C1FB33B"
           },
           "editorMode": "code",
-          "expr": "sum(rate(local_to_remote_matches{namespace=~\"backlog_exp\", operation=\"PollActivityTaskQueue\"}[10s])) + sum(rate(remote_to_remote_matches{namespace=~\"backlog_exp\", operation=\"PollActivityTaskQueue\"}[10s]))",
+          "expr": "sum(rate(local_to_remote_matches{namespace=~\"backlog_exp\", task_type=\"Activity\"}[10s])) + sum(rate(remote_to_remote_matches{namespace=~\"backlog_exp\", task_type=\"Activity\"}[10s]))",
           "hide": false,
           "legendFormat": "true",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P911AE79A5C1FB33B"
+          },
+          "editorMode": "code",
+          "expr": "rate(local_to_local_matches{}[10s])",
+          "hide": true,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P911AE79A5C1FB33B"
+          },
+          "editorMode": "code",
+          "expr": "rate(local_to_remote_matches{namespace=~\"backlog_exp\"}[1m])",
+          "hide": true,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P911AE79A5C1FB33B"
+          },
+          "editorMode": "code",
+          "expr": "rate(remote_to_local_matches{namespace=~\"backlog_exp\"}[1m])",
+          "hide": true,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P911AE79A5C1FB33B"
+          },
+          "editorMode": "code",
+          "expr": "rate(remote_to_remote_matches{namespace=~\"backlog_exp\"}[1m])",
+          "hide": true,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "F"
         }
       ],
       "title": "Child partition poller forward",
@@ -1754,7 +1802,32 @@
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "serviceerror_Internal"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
@@ -1800,13 +1873,13 @@
     "list": []
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-30m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Partitions and Backlog Experiment",
   "uid": "AhMmWPmSk",
-  "version": 21,
+  "version": 22,
   "weekStart": ""
 }
