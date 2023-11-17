@@ -588,7 +588,7 @@ func countOneBuildCurrent(build string) {
         "bool" : {
             "filter": [
               { "term": { "NamespaceId": "`+cmn.NamespaceId+`" }},
-              { "term" : { "BuildIds" : "versioned:`+build+`" }}
+              { "term" : { "BuildIds" : "current:versioned:`+cmn.NamespaceId+`:`+build+`" }}
             ]
         }
     }
@@ -605,7 +605,7 @@ func countOneBuildCurrentField(build string) {
         "bool" : {
             "filter": [
               { "term": { "NamespaceId": "`+cmn.NamespaceId+`" }},
-              { "term" : { "CurrentBuildId" : "versioned:`+build+`" }}
+              { "term" : { "CurrentBuildId" : "`+cmn.NamespaceId+`:`+build+`" }}
             ]
         }
     }
@@ -621,7 +621,7 @@ func countOneBuildCurrentNSField(build string) {
 		"query" : {
         "bool" : {
             "filter": [
-              { "term" : { "CurrentBuildId" : "versioned:`+build+`" }}
+              { "term" : { "CurrentBuildId" : "`+cmn.NamespaceId+`:`+build+`" }}
             ]
         }
     }
@@ -637,7 +637,7 @@ func countOneBuildCurrentNS(build string) {
 		"query" : {
         "bool" : {
             "filter": [
-              { "term" : { "BuildIds" : "versioned:`+build+`" }}
+              { "term" : { "BuildIds" : "current:versioned:`+cmn.NamespaceId+`:`+build+`" }}
             ]
         }
     }
@@ -923,8 +923,8 @@ func groupByBuildCurrent() {
           		"terms": {
           			"size": `+strconv.Itoa(groupBySize)+`,
             		"field": "BuildIds",`+
-		`"include": "versioned:B-22.*"`+
-		//`"include": "current:versioned:.*"`+
+		//`"include": "versioned:B-22.*"`+
+		`"include": "current:versioned:.*"`+
 		`}
 			}
 		}
@@ -943,8 +943,8 @@ func groupByBuildCurrentNS() {
           		"terms": {
           			"size": `+strconv.Itoa(groupBySize)+`,
             		"field": "BuildIds",`+
-		`"include": "versioned:B-22.*"`+
-		//`"include": "current:versioned:.*"`+
+		//`"include": "versioned:B-22.*"`+
+		`"include": "current:versioned:`+cmn.NamespaceId+`:.*"`+
 		`}
 			}
 		}
@@ -969,10 +969,8 @@ func groupByBuildCurrentField() {
 			"group_by_BuildIds": {
           		"terms": {
           			"size": `+strconv.Itoa(groupBySize)+`,
-            		"field": "CurrentBuildId",`+
-		`"include": "versioned:B-22.*"`+
-		//`"include": "current:versioned:.*"`+
-		`}
+            		"field": "CurrentBuildId"
+				}
 			}
 		}
 		}`),
@@ -989,10 +987,9 @@ func groupByBuildCurrentNSField() {
 			"group_by_BuildIds": {
           		"terms": {
           			"size": `+strconv.Itoa(groupBySize)+`,
-            		"field": "CurrentBuildId",`+
-		`"include": "versioned:B-22.*"`+
-		//`"include": "current:versioned:.*"`+
-		`}
+            		"field": "CurrentBuildId",
+					"include": "`+cmn.NamespaceId+`:.*"
+				}
 			}
 		}
 		}`),
@@ -1093,9 +1090,14 @@ func groupByBuildTqFiltered(buildIds []string) {
 }
 
 func runQuery(q []byte, qtype string, name string, log bool) {
+	log = true
 	url := cmn.BaseUrl + cmn.Index + "/_" + qtype
 	req, err := http.NewRequest("GET", url, bytes.NewBuffer(q))
 	req.Header.Set("Content-Type", "application/json")
+
+	if cmn.Password != "" {
+		req.SetBasicAuth("temporal", cmn.Password)
+	}
 
 	client := &http.Client{}
 	start := time.Now()

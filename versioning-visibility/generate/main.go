@@ -12,8 +12,9 @@ import (
 )
 
 var (
-	workers = 1
-	tasks   = make(chan string)
+	workers   = 1
+	tasks     = make(chan string)
+	batchSize = 100
 )
 
 func main() {
@@ -58,8 +59,8 @@ func putDoc(buildId string, status string, tq string, start int64) {
 	if status == cmn.StatusCompleted {
 		closeTime = `"CloseTime": "` + time.Unix(0, start+int64(cmn.WfLen)).UTC().Format(time.RFC3339Nano) + `",`
 	} else {
-		currentBuildId = `"current:versioned:` + buildId + `",`
-		currentBuildIdField = `"CurrentBuildId": "versioned:` + buildId + `",`
+		currentBuildId = `"current:versioned:` + cmn.NamespaceId + `:` + buildId + `",`
+		currentBuildIdField = `"CurrentBuildId": "` + cmn.NamespaceId + `:` + buildId + `",`
 	}
 	var jsonStr = `{
 		  ` + closeTime + currentBuildIdField + `
@@ -82,7 +83,6 @@ func putDoc(buildId string, status string, tq string, start int64) {
 
 func work() {
 	client := &http.Client{}
-	batchSize := 100
 	buf := [][]byte{}
 	for t := range tasks {
 		buf = append(buf, []byte(strings.Replace(t, "\n", "", -1)))
@@ -108,6 +108,11 @@ func submit(client *http.Client, buf [][]byte) {
 	url := cmn.BaseUrl + "_bulk/"
 	req, err := http.NewRequest("POST", url, data)
 	req.Header.Set("Content-Type", "application/json")
+
+	if cmn.Password != "" {
+		req.SetBasicAuth("temporal", cmn.Password)
+	}
+
 	var resp *http.Response
 	for i := 100; ; i = min(i*2, 10000) {
 		resp, err = client.Do(req)

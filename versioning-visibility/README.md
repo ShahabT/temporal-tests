@@ -9,6 +9,17 @@ check schema
 curl localhost:9200/temporal_visibility_v1_dev/_mapping | jq
 ```
 
+add CurrentBuildId field
+```shell
+curl -X PUT localhost:9200/temporal_visibility_v1_dev/_mapping -H 'Content-Type: application/json' -d '{
+  "properties": {
+    "CurrentBuildId": {
+      "type": "keyword"
+    }
+  }
+}'| jq
+```
+
 find some docs
 ```shell
 curl localhost:9200/temporal_visibility_v1_dev/_search -H 'Content-Type: application/json' -d '{                                     
@@ -54,7 +65,7 @@ curl localhost:9200/temporal_visibility_v1_dev/_search -H 'Content-Type: applica
    "query" : {
         "bool" : {
             "filter": [
-              { "term": { "NamespaceId": "7139bd23-bc97-4e49-943d-3f05ac1d3e5f" }},
+              { "term": { "NamespaceId": "9139bd23-bc97-4e49-943d-3f05ac1d3e5f" }},
               { "term": { "ExecutionStatus": "Running" }}
             ]
         }
@@ -63,7 +74,7 @@ curl localhost:9200/temporal_visibility_v1_dev/_search -H 'Content-Type: applica
         "group_by": {
           "terms": {
             "size": 10000,
-            "field": "BuildIds"
+            "field": "CurrentBuildId"
           }
         }
     }

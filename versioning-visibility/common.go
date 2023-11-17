@@ -6,20 +6,22 @@ import (
 )
 
 const (
-	BaseUrl     = "http://localhost:9200/"
-	Index       = "temporal_visibility_v1_dev"
-	NamespaceId = "6139bd23-bc97-4e49-943d-3f05ac1d3e5f"
-	Retention   = 30*24*time.Hour + 5*time.Minute
-	Rps         = 10
-	WfLen       = 10 * time.Minute
-	BuildLen    = 60 * time.Minute
-	NTaskQueues = 5
-	//NamespaceId = "7139bd23-bc97-4e49-943d-3f05ac1d3e5f"
-	//Retention   = 1*time.Hour + 5*time.Minute
-	//Rps         = 1
+	BaseUrl  = "http://localhost:9200/"
+	Index    = "temporal_visibility_v1_dev"
+	Password = ""
+
+	//NamespaceId = "6139bd23-bc97-4e49-943d-3f05ac1d3e5f"
+	//Retention   = 30*24*time.Hour + 5*time.Minute
+	//Rps         = 10
 	//WfLen       = 10 * time.Minute
-	//BuildLen    = 30 * time.Minute
+	//BuildLen    = 60 * time.Minute
 	//NTaskQueues = 5
+	NamespaceId = "9139bd23-bc97-4e49-943d-3f05ac1d3e5f"
+	Retention   = 1*time.Hour + 5*time.Minute
+	Rps         = 1
+	WfLen       = 10 * time.Minute
+	BuildLen    = 30 * time.Minute
+	NTaskQueues = 5
 )
 
 const (
