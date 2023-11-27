@@ -22,6 +22,8 @@ const (
 	WfLen       = 10 * time.Minute
 	BuildLen    = 30 * time.Minute
 	NTaskQueues = 5
+
+	FillingNamespaceId = ""
 )
 
 const (

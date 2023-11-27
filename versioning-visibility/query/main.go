@@ -14,7 +14,11 @@ import (
 	"time"
 )
 
-const repetition = 10
+const profile = ""
+const terminateAfter = "?terminate_after=1"
+
+// const profile = `"profile": true,`
+const repetition = 1
 
 // const reachabilityInterval = time.Minute
 // const reachabilityFreq = int(cmn.WfLen/reachabilityInterval) + 1
@@ -37,23 +41,23 @@ var strategyStats = make(map[string][]int64)
 var tests = []func(){
 	//ReachabilityCountOneBuildPerTqOpen,
 	//ReachabilityCountOneBuildPerTq,
-	ReachabilityCountOneBuildAllTqOpen,
+	//ReachabilityCountOneBuildAllTqOpen,
 	ReachabilityCountOneBuildAllTq,
-	ReachabilityCountOneBuildAllTqCurrent,
-	ReachabilityCountOneBuildAllTqCurrentNS,
-	ReachabilityCountOneBuildAllTqCurrentField,
-	ReachabilityCountOneBuildAllTqCurrentNSField,
+	//ReachabilityCountOneBuildAllTqCurrent,
+	//ReachabilityCountOneBuildAllTqCurrentNS,
+	//ReachabilityCountOneBuildAllTqCurrentField,
+	//ReachabilityCountOneBuildAllTqCurrentNSField,
 	//ReachabilityLimitOneBuildPerTqOpen,
 	//ReachabilityLimitOneBuildAllTqOpen,
 	//ReachabilityLimitOneBuildPerTq,
-	//ReachabilityLimitOneBuildAllTq,
-	ReachabilityGroupByBuild,
+	ReachabilityLimitOneBuildAllTq,
+	//ReachabilityGroupByBuild,
 	//ReachabilityGroupByBuildTq,
-	ReachabilityGroupByBuildOpen,
-	ReachabilityGroupByBuildCurrent,
-	ReachabilityGroupByBuildCurrentNS,
-	ReachabilityGroupByBuildCurrentField,
-	ReachabilityGroupByBuildCurrentNSField,
+	//ReachabilityGroupByBuildOpen,
+	//ReachabilityGroupByBuildCurrent,
+	//ReachabilityGroupByBuildCurrentNS,
+	//ReachabilityGroupByBuildCurrentField,
+	//ReachabilityGroupByBuildCurrentNSField,
 	//ReachabilityGroupByBuildTqOpen,
 	//ScavengerCountOneBuildPerTqOpen,
 	//ScavengerCountOneBuildAllTqOpen,
@@ -69,7 +73,7 @@ var tests = []func(){
 	//ScavengerGroupByBuildTqOpen,
 	//ReachabilityLastStartOneBuildAllTq,
 	//ReachabilityLastStartOneBuildPerTq,
-	//ReachabilityGroupByTqOneBuild,
+	ReachabilityGroupByTqOneBuild,
 	//ReachabilityGroupByTqOneBuildOpen,
 }
 
@@ -154,9 +158,11 @@ func ReachabilityLastStartOneBuildPerTq() {
 	start := time.Now()
 	bld := maxBuildId - 1
 	for i := 0; i < lastStartFreq; i++ {
-		for tq := 0; tq < cmn.NTaskQueues; tq++ {
-			lastStartOneBuildOneTq(cmn.BuildId(bld), cmn.TaskQueue(tq))
-		}
+
+		lastStartOneBuildGroupByPerTq(cmn.BuildId(bld))
+		//for tq := 0; tq < cmn.NTaskQueues; tq++ {
+		//	lastStartOneBuildOneTq(cmn.BuildId(bld), cmn.TaskQueue(tq))
+		//}
 	}
 	recordStrategyStats("ReachabilityLastStartOneBuildPerTq", start)
 }
@@ -444,7 +450,7 @@ func ScavengerGroupByBuildOpen() {
 }
 
 func reportStats() {
-	fmt.Printf("\n| %30s | %8s | %8s | %8s | %8s |\n", "Query", "Rep", "Avg", "Min", "Max")
+	fmt.Printf("\n| %30s | %8s | %8s | %8s | %8s | %8s | %8s | %8s |\n", "Query", "Rep", "Avg", "Min", "Max", "Took Avg", "Took Min", "Took Max")
 
 	keys := make([]string, 0, len(queryStats))
 	for k := range queryStats {
@@ -453,8 +459,8 @@ func reportStats() {
 	sort.Strings(keys)
 
 	for _, k := range keys {
-		count, avg, min, max, _, _, _ := summarizeQuery(queryStats[k])
-		fmt.Printf("| %30s | %8d | %8d | %8d | %8d |\n", k, count, avg, min, max)
+		count, avg, min, max, tookAvg, tookMin, tookMax := summarizeQuery(queryStats[k])
+		fmt.Printf("| %30s | %8d | %8d | %8d | %8d | %8d | %8d | %8d |\n", k, count, avg, min, max, tookAvg, tookMin, tookMax)
 	}
 
 	fmt.Printf("\n| %50s | %8s | %8s | %8s | %8s |\n", "Strategy", "Rep", "Avg", "Min", "Max")
@@ -649,8 +655,9 @@ func countOneBuildCurrentNS(build string) {
 }
 
 func limitOneBuildOneTq(build string, tq string) {
-	runQuery([]byte(`{
+	runQuery([]byte(`{`+profile+`
 		"size": 1,
+		"track_total_hits": false,
 		"query" : {
         "bool" : {
             "filter": [
@@ -668,8 +675,9 @@ func limitOneBuildOneTq(build string, tq string) {
 }
 
 func limitOneBuild(build string) {
-	runQuery([]byte(`{
+	runQuery([]byte(`{`+profile+`
 		"size": 1,
+		"track_total_hits": false,
 		"query" : {
         "bool" : {
             "filter": [
@@ -686,8 +694,9 @@ func limitOneBuild(build string) {
 }
 
 func limitOneBuildOneTqOpen(build string, tq string) {
-	runQuery([]byte(`{
+	runQuery([]byte(`{`+profile+`
 		"size": 1,
+		"track_total_hits": false,
 		"query" : {
         "bool" : {
             "filter": [
@@ -706,8 +715,9 @@ func limitOneBuildOneTqOpen(build string, tq string) {
 }
 
 func limitOneBuildOpen(build string) {
-	runQuery([]byte(`{
+	runQuery([]byte(`{`+profile+`
 		"size": 1,
+		"track_total_hits": false,
 		"query" : {
         "bool" : {
             "filter": [
@@ -725,8 +735,9 @@ func limitOneBuildOpen(build string) {
 }
 
 func groupByBuild() {
-	runQuery([]byte(`{
+	runQuery([]byte(`{`+profile+`
 		"size": 0,
+		"track_total_hits": false,
 		"query" : {
         	"bool" : {
             	"filter": [
@@ -750,8 +761,9 @@ func groupByBuild() {
 }
 
 func groupByBuildTq() {
-	runQuery([]byte(`{
+	runQuery([]byte(`{`+profile+`
 		"size": 0,
+		"track_total_hits": false,
 		"query" : {
         	"bool" : {
             	"filter": [
@@ -779,8 +791,9 @@ func groupByBuildTq() {
 }
 
 func groupByTqOneBuild(build string) {
-	runQuery([]byte(`{
+	runQuery([]byte(`{`+profile+`
 		"size": 0,
+		"track_total_hits": false,
 		"query" : {
         	"bool" : {
             	"filter": [
@@ -805,8 +818,9 @@ func groupByTqOneBuild(build string) {
 }
 
 func groupByTqOneBuildOpen(build string) {
-	runQuery([]byte(`{
+	runQuery([]byte(`{`+profile+`
 		"size": 0,
+		"track_total_hits": false,
 		"query" : {
         	"bool" : {
             	"filter": [
@@ -832,8 +846,9 @@ func groupByTqOneBuildOpen(build string) {
 }
 
 func lastStartOneBuild(build string) {
-	runQuery([]byte(`{
+	runQuery([]byte(`{`+profile+`
 		"size": 0,
+		"track_total_hits": false,
 		"query" : {
         	"bool" : {
             	"filter": [
@@ -856,9 +871,44 @@ func lastStartOneBuild(build string) {
 	)
 }
 
-func lastStartOneBuildOneTq(build string, tq string) {
-	runQuery([]byte(`{
+func lastStartOneBuildGroupByPerTq(build string) {
+	runQuery([]byte(`{`+profile+`
 		"size": 0,
+		"track_total_hits": false,
+		"query" : {
+        	"bool" : {
+            	"filter": [
+              		{ "term": { "NamespaceId": "`+cmn.NamespaceId+`" }},
+              		{ "term" : { "BuildIds" : "versioned:`+build+`" }}
+            	]
+        	}
+    	},
+		"aggs": {
+			"group_by": {
+				"terms": {
+          			"size": `+strconv.Itoa(groupBySize)+`,
+            		"field": "TaskQueue"
+                },
+				"aggs": {
+					"maxStart": {
+					  "max": {
+							"field": "StartTime"
+					  }
+					}
+          		}
+			}
+		}
+		}`),
+		"search",
+		"lastStartOneBuildGroupByPerTq",
+		true,
+	)
+}
+
+func lastStartOneBuildOneTq(build string, tq string) {
+	runQuery([]byte(`{`+profile+`
+		"size": 0,
+		"track_total_hits": false,
 		"query" : {
         	"bool" : {
             	"filter": [
@@ -883,8 +933,9 @@ func lastStartOneBuildOneTq(build string, tq string) {
 }
 
 func groupByBuildOpen() {
-	runQuery([]byte(`{
+	runQuery([]byte(`{`+profile+`
 		"size": 0,
+		"track_total_hits": false,
 		"query" : {
         	"bool" : {
             	"filter": [
@@ -909,8 +960,9 @@ func groupByBuildOpen() {
 }
 
 func groupByBuildCurrent() {
-	runQuery([]byte(`{
+	runQuery([]byte(`{`+profile+`
 		"size": 0,
+		"track_total_hits": false,
 		"query" : {
         	"bool" : {
             	"filter": [
@@ -936,8 +988,9 @@ func groupByBuildCurrent() {
 }
 
 func groupByBuildCurrentNS() {
-	runQuery([]byte(`{
+	runQuery([]byte(`{`+profile+`
 		"size": 0,
+		"track_total_hits": false,
 		"aggs": {
 			"group_by_BuildIds": {
           		"terms": {
@@ -956,8 +1009,9 @@ func groupByBuildCurrentNS() {
 }
 
 func groupByBuildCurrentField() {
-	runQuery([]byte(`{
+	runQuery([]byte(`{`+profile+`
 		"size": 0,
+		"track_total_hits": false,
 		"query" : {
         	"bool" : {
             	"filter": [
@@ -981,8 +1035,9 @@ func groupByBuildCurrentField() {
 }
 
 func groupByBuildCurrentNSField() {
-	runQuery([]byte(`{
+	runQuery([]byte(`{`+profile+`
 		"size": 0,
+		"track_total_hits": false,
 		"aggs": {
 			"group_by_BuildIds": {
           		"terms": {
@@ -1000,8 +1055,9 @@ func groupByBuildCurrentNSField() {
 }
 
 func groupByBuildTqOpen() {
-	runQuery([]byte(`{
+	runQuery([]byte(`{`+profile+`
 		"size": 0,
+		"track_total_hits": false,
 		"query" : {
         	"bool" : {
             	"filter": [
@@ -1032,8 +1088,9 @@ func groupByBuildTqOpen() {
 func groupByBuildFiltered(buildIds []string) {
 	filter := `["versioned:` + strings.Join(buildIds, `", "versioned:`) + `"]`
 
-	runQuery([]byte(`{
+	runQuery([]byte(`{`+profile+`
 		"size": 0,
+		"track_total_hits": false,
 		"query" : {
         	"bool" : {
             	"filter": [
@@ -1060,8 +1117,9 @@ func groupByBuildFiltered(buildIds []string) {
 func groupByBuildTqFiltered(buildIds []string) {
 	filter := `["versioned:` + strings.Join(buildIds, `", "versioned:`) + `"]`
 
-	runQuery([]byte(`{
+	runQuery([]byte(`{`+profile+`
 		"size": 0,
+		"track_total_hits": false,
 		"query" : {
         	"bool" : {
             	"filter": [
@@ -1091,6 +1149,12 @@ func groupByBuildTqFiltered(buildIds []string) {
 
 func runQuery(q []byte, qtype string, name string, log bool) {
 	log = true
+
+	if qtype == "count" {
+		qtype += terminateAfter
+	} else if qtype == "search" {
+		qtype += "?track_total_hits=false"
+	}
 	url := cmn.BaseUrl + cmn.Index + "/_" + qtype
 	req, err := http.NewRequest("GET", url, bytes.NewBuffer(q))
 	req.Header.Set("Content-Type", "application/json")
@@ -1127,7 +1191,8 @@ func runQuery(q []byte, qtype string, name string, log bool) {
 
 	if log {
 		fmt.Printf("resp.took: %d timer: %d \n", statspoint.took, statspoint.timer)
-		fmt.Println("response Body:", string(body))
+		pretty, _ := json.MarshalIndent(data, "", "    ")
+		fmt.Println("response Body:", string(pretty))
 	}
 	s := queryStats[name]
 	if s == nil {
@@ -1135,6 +1200,32 @@ func runQuery(q []byte, qtype string, name string, log bool) {
 		queryStats[name] = s
 	} else {
 		queryStats[name] = append(s, statspoint)
+	}
+
+	if name != "filling" && cmn.FillingNamespaceId != "" {
+		runQuery([]byte(`{
+                "size": 0,
+		"track_total_hits": false,
+                "query" : {
+                "bool" : {
+                "filter": [
+                        { "term": { "NamespaceId": "`+cmn.FillingNamespaceId+`" }}
+                ]
+                }
+        },
+                "aggs": {
+                        "group_by_BuildIds": {
+                        "terms": {
+                                "size": `+strconv.Itoa(groupBySize)+`,
+                        "field": "BuildIds"
+                        }
+                        }
+                }
+                }`),
+			"search",
+			"filling",
+			false,
+		)
 	}
 }
 
