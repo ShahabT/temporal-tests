@@ -901,7 +901,7 @@ func lastStartOneBuildGroupByPerTq(build string) {
 		}`),
 		"search",
 		"lastStartOneBuildGroupByPerTq",
-		true,
+		false,
 	)
 }
 
