@@ -24,7 +24,10 @@ type NamespaceConfig struct {
 }
 
 const (
-	RPS = 10
+	QueryRPS        = 1
+	InsertRPS       = 1
+	InsertWorkers   = 1
+	InsertBatchSize = 1
 
 	OpenFilterRatio         = .6
 	BuildIdNonexistentRatio = .2
@@ -39,37 +42,39 @@ const (
 )
 
 var workloads = []NamespaceConfig{
-	{
-		"C6139bd23-bc97-4e49-943d-3f05ac1d3e5f",
-		168,
-		166,
-		4,
-		10,
-	},
-	{
-		"B6139bd23-bc97-4e49-943d-3f05ac1d3e5f",
-		168,
-		167,
-		4,
-		5,
-	},
-	{
-		"7139bd23-bc97-4e49-943d-3f05ac1d3e5f",
-		2,
-		1,
-		4,
-		5,
-	},
 	//{
-	//	"6139bd23-bc97-4e49-943d-3f05ac1d3e5f",
-	//	720,
-	//	719,
+	//	"C6139bd23-bc97-4e49-943d-3f05ac1d3e5f",
+	//	168,
+	//	166,
+	//	4,
+	//	10,
+	//},
+	//{
+	//	"B6139bd23-bc97-4e49-943d-3f05ac1d3e5f",
+	//	168,
+	//	167,
 	//	4,
 	//	5,
 	//},
+	//{
+	//	"7139bd23-bc97-4e49-943d-3f05ac1d3e5f",
+	//	2,
+	//	1,
+	//	4,
+	//	5,
+	//},
+	{
+		"6139bd23-bc97-4e49-943d-3f05ac1d3e5f",
+		720,
+		719,
+		4,
+		5,
+	},
 }
 
 const terminateAfter = "terminate_after=1&"
+
+var insertCounter = 0
 
 var qCounter = 0
 var qTime int64 = 0
@@ -82,7 +87,28 @@ var mutex sync.Mutex
 
 func main() {
 	reportRPS()
-	ticker := time.NewTicker(time.Second / RPS)
+
+	for w := 0; w < InsertWorkers; w++ {
+		go cmn.Work(InsertBatchSize)
+	}
+	go insertDocs()
+
+	runQueries()
+}
+
+func insertDocs() {
+	ticker := time.NewTicker(time.Second / InsertRPS)
+	for range ticker.C {
+		ns := getNamespace()
+		bld := cmn.BuildId(rand.Intn(ns.maxBuildId))
+		tq := cmn.TaskQueue(rand.Intn(ns.maxTq))
+		cmn.PutDoc(ns.id, bld, cmn.StatusCompleted, tq, time.Now().UnixNano())
+		insertCounter++
+	}
+}
+
+func runQueries() {
+	ticker := time.NewTicker(time.Second / QueryRPS)
 	for range ticker.C {
 		go runOneQuery()
 	}
@@ -94,6 +120,7 @@ func reportRPS() {
 		var sec = 1
 		var lastCount = 0
 		var lastSCount = 0
+		var lastICount = 0
 		for range ticker.C {
 			fullQAvg := int64(-1)
 			if qCounter > 0 {
@@ -104,14 +131,16 @@ func reportRPS() {
 				shardQAvg = sqTime / int64(sqCounter)
 			}
 			fmt.Printf(
-				"FullQ RPS: %d\t Full Q Avg microSec: %d\t ShardQ RPS: %d\t ShardQ Avg microSec: %d \n",
+				"FullQ RPS: %d\t Full Q Avg microSec: %d\t ShardQ RPS: %d\t ShardQ Avg microSec: %d\t Doc Insert RPS: %d \n",
 				qCounter-lastCount,
 				fullQAvg,
 				sqCounter-lastSCount,
 				shardQAvg,
+				insertCounter-lastICount,
 			)
 			lastCount = qCounter
 			lastSCount = sqCounter
+			lastICount = insertCounter
 
 			if sec%60 == 0 {
 				reportStats()
@@ -122,7 +151,7 @@ func reportRPS() {
 	}()
 }
 
-func runOneQuery() {
+func getNamespace() NamespaceConfig {
 	loads := 0
 	for _, wl := range workloads {
 		loads += wl.loadShare
@@ -139,6 +168,12 @@ func runOneQuery() {
 			break
 		}
 	}
+
+	return ns
+}
+
+func runOneQuery() {
+	ns := getNamespace()
 
 	tqs := ""
 	excludeTQs := rand.Float32() < TQExcludeRatio

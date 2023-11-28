@@ -390,7 +390,7 @@ end: 11-28 5:14 UTC
     impact on other requests: avg latency increased from ~30ms to 90ms, 250ms, 350ms depending on query. p99 increased to .5, 2.7, 4.3 secs depending on query
 
 
-Run 6:
+Run 6: add support for multiple builds and TQs, and excluding TQs. Barely tolerated for 1 min
 
         RPS = 300
 
