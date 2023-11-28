@@ -7,6 +7,10 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"sort"
+	"strconv"
+	"strings"
+	"sync"
 	cmn "temporaltests/versioning-visibility"
 	"time"
 )
@@ -18,6 +22,21 @@ type NamespaceConfig struct {
 	maxTq          int
 	loadShare      int
 }
+
+const (
+	RPS = 10
+
+	OpenFilterRatio         = .6
+	BuildIdNonexistentRatio = .2
+
+	TQFilterRatio  = .3
+	TQExcludeRatio = .5
+
+	NumBuildIdsInFilter = 10
+	NumTQsInFilter      = 4
+
+	NumShards = 20
+)
 
 var workloads = []NamespaceConfig{
 	{
@@ -50,34 +69,55 @@ var workloads = []NamespaceConfig{
 	//},
 }
 
-const (
-	RPS = 100
-
-	OpenFilterRatio         = .6
-	TQFilterRatio           = .1
-	BuildIdNonexistentRatio = .2
-)
-
-const terminateAfter = "?terminate_after=1"
+const terminateAfter = "terminate_after=1&"
 
 var qCounter = 0
+var qTime int64 = 0
+
+var sqCounter = 0
+var sqTime int64 = 0
+
+var queryStats = make(map[string][]int64)
+var mutex sync.Mutex
 
 func main() {
 	reportRPS()
 	ticker := time.NewTicker(time.Second / RPS)
 	for range ticker.C {
 		go runOneQuery()
-		qCounter++
 	}
 }
 
 func reportRPS() {
-	ticker := time.NewTicker(1 * time.Second)
+	ticker := time.NewTicker(time.Second)
 	go func() {
+		var sec = 1
 		var lastCount = 0
+		var lastSCount = 0
 		for range ticker.C {
-			fmt.Printf("RPS: %d \n", qCounter-lastCount)
+			fullQAvg := int64(-1)
+			if qCounter > 0 {
+				fullQAvg = qTime / int64(qCounter)
+			}
+			shardQAvg := int64(-1)
+			if sqCounter > 0 {
+				shardQAvg = sqTime / int64(sqCounter)
+			}
+			fmt.Printf(
+				"FullQ RPS: %d\t Full Q Avg microSec: %d\t ShardQ RPS: %d\t ShardQ Avg microSec: %d \n",
+				qCounter-lastCount,
+				fullQAvg,
+				sqCounter-lastSCount,
+				shardQAvg,
+			)
 			lastCount = qCounter
+			lastSCount = sqCounter
+
+			if sec%60 == 0 {
+				reportStats()
+			}
+
+			sec++
 		}
 	}()
 }
@@ -100,67 +140,126 @@ func runOneQuery() {
 		}
 	}
 
-	tq := -1
+	tqs := ""
+	excludeTQs := rand.Float32() < TQExcludeRatio
 	if rand.Float32() < TQFilterRatio {
-		tq = rand.Intn(ns.maxTq)
+		tqs = getTQs(ns)
 	}
 
 	nonexistent := rand.Float32() < BuildIdNonexistentRatio
-	if rand.Float32() < OpenFilterRatio {
-		build := rand.Intn(ns.maxBuildId-ns.openMinBuildId+1) + ns.openMinBuildId
-		if nonexistent {
-			build = rand.Intn(ns.openMinBuildId)
-		}
-		query(ns, cmn.BuildId(build), tq, true, nonexistent)
-	} else {
-		build := rand.Intn(ns.maxBuildId + 1)
-		if nonexistent {
-			build += ns.maxBuildId
-		}
-		query(ns, cmn.BuildId(build), tq, false, nonexistent)
-	}
+	openOnly := rand.Float32() < OpenFilterRatio
+	buildIds := getBuildIds(ns, openOnly, nonexistent)
 
+	query(ns, buildIds, tqs, openOnly, nonexistent, excludeTQs)
 }
 
-func query(ns NamespaceConfig, buildId string, taskQueue int, openOnly bool, nonexistent bool) {
+func getBuildIds(ns NamespaceConfig, openOnly bool, nonexistent bool) string {
+	res := []string{}
+
+	for i := 0; i < NumBuildIdsInFilter; i++ {
+		if openOnly {
+			build := rand.Intn(ns.maxBuildId-ns.openMinBuildId+1) + ns.openMinBuildId
+			if nonexistent {
+				build = rand.Intn(ns.openMinBuildId) - 1
+			}
+			res = append(res, "versioned:"+cmn.BuildId(build))
+		} else {
+			build := rand.Intn(ns.maxBuildId + 1)
+			if nonexistent {
+				build += ns.maxBuildId + 1
+			}
+			res = append(res, "versioned:"+cmn.BuildId(build))
+		}
+
+	}
+
+	return `"` + strings.Join(res, `", "`) + `"`
+}
+
+func getTQs(ns NamespaceConfig) string {
+	res := []string{}
+
+	for i := 0; i < NumTQsInFilter; i++ {
+		res = append(res, cmn.TaskQueue(rand.Intn(ns.maxTq)))
+	}
+
+	return `"` + strings.Join(res, `", "`) + `"`
+}
+
+func query(ns NamespaceConfig, buildIds string, taskQueues string, openOnly bool, nonexistent bool, excludeTqs bool) {
 	running := ""
 	if openOnly {
 		running = `{ "term": { "ExecutionStatus": "Running" }},`
 	}
 
-	tq := ""
-	if taskQueue > -1 {
-		tq = `{ "term" : { "TaskQueue" : "` + cmn.TaskQueue(taskQueue) + `" }},`
+	tqFilter := ""
+	excludeTq := ""
+	if taskQueues != "" {
+		if excludeTqs {
+			excludeTq = `"must_not" : { "terms" : { "TaskQueue" : [` + taskQueues + `] }},`
+		} else {
+			tqFilter = `{ "terms" : { "TaskQueue" : [` + taskQueues + `] }},`
+		}
 	}
 
-	runQuery([]byte(`{
+	query := []byte(`{
 		"query" : {
         "bool" : {
+			` + excludeTq + `
             "filter": [
-			  `+running+`
- 			  `+tq+`
-              { "term": { "NamespaceId": "`+ns.id+`" }},
-              { "term" : { "BuildIds" : "versioned:`+buildId+`" }}
+			  ` + running + `
+ 			  ` + tqFilter + `
+              { "term": { "NamespaceId": "` + ns.id + `" }},
+              { "terms" : { "BuildIds" : [` + buildIds + `] }}
             ]
         }
     }
-        }`),
-		"count",
-		false,
-		nonexistent,
-	)
+        }`)
+
+	name := ""
+
+	if openOnly {
+		name += "-Open"
+	} else {
+		name += "-All"
+	}
+	if taskQueues != "" {
+		if excludeTqs {
+			name += "-ExcludeTQs"
+		} else {
+			name += "-IncludeTQs"
+		}
+	} else {
+		name += "-AllTQs"
+	}
+	if nonexistent {
+		name += "-Empty"
+	} else {
+		name += "-NonEmpty"
+	}
+
+	if NumShards > -1 {
+		shard := rand.Intn(NumShards)
+		count, err := runQuery(query, "Shard-"+name, false, nonexistent, shard)
+		if err == nil && count > 0 {
+			return
+		}
+	}
+
+	runQuery(query, "Full-"+name, false, nonexistent, -1)
 }
 
-func runQuery(q []byte, qtype string, log bool, expectingZero bool) {
-	if qtype == "count" {
-		qtype += terminateAfter
-	} else if qtype == "search" {
-		qtype += "?track_total_hits=false"
+func runQuery(q []byte, name string, log bool, expectingZero bool, shard int) (int, error) {
+	url := cmn.BaseUrl + cmn.Index + "/_count?" + terminateAfter
+
+	if shard > -1 {
+		url += "preference=_shards:" + strconv.Itoa(shard) + "|_only_local"
 	}
-	url := cmn.BaseUrl + cmn.Index + "/_" + qtype
+
 	req, err := http.NewRequest("GET", url, bytes.NewBuffer(q))
 	req.Header.Set("Content-Type", "application/json")
 
+	start := time.Now()
 	if cmn.Password != "" {
 		req.SetBasicAuth("temporal", cmn.Password)
 	}
@@ -168,24 +267,49 @@ func runQuery(q []byte, qtype string, log bool, expectingZero bool) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		fmt.Println("error while querying ES", err)
+		return -1, err
 	}
 	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode > 299 {
-		fmt.Println("####### QUERY:")
-		fmt.Println(string(q))
-		fmt.Println("response Status:", resp.Status)
-		fmt.Println("Body:", body)
-		return
+		if resp.StatusCode == 429 {
+			fmt.Println("Was throttled")
+		} else {
+			fmt.Println("####### QUERY:")
+			fmt.Println(string(q))
+			fmt.Println("response Status:", resp.Status)
+			fmt.Println("Body:", body)
+		}
+		return -1, fmt.Errorf(resp.Status)
 	}
+
+	timer := int64(time.Since(start) / time.Microsecond)
+	if shard > -1 {
+		sqCounter++
+		sqTime += timer
+	} else {
+		qCounter++
+		qTime += timer
+	}
+
+	mutex.Lock()
+	s := queryStats[name]
+	if s == nil {
+		s = []int64{timer}
+		queryStats[name] = s
+	} else {
+		queryStats[name] = append(s, timer)
+	}
+	mutex.Unlock()
 
 	var data map[string]interface{}
 	json.Unmarshal(body, &data)
 
-	count := data["count"].(float64)
-	countOK := (count > 0 && !expectingZero) || (expectingZero && count == 0)
+	count := int(data["count"].(float64))
+
+	countOK := shard > -1 || (count > 0 && !expectingZero) || (expectingZero && count == 0)
 
 	if !countOK {
 		fmt.Println("Unexpected Count, expectedZero=", expectingZero)
@@ -199,4 +323,40 @@ func runQuery(q []byte, qtype string, log bool, expectingZero bool) {
 		pretty, _ := json.MarshalIndent(data, "", "    ")
 		fmt.Println("response Body:", string(pretty))
 	}
+
+	return count, nil
+}
+
+func reportStats() {
+	mutex.Lock()
+	stats := queryStats
+	queryStats = make(map[string][]int64)
+	mutex.Unlock()
+	fmt.Printf("\n| %50s | %8s | %8s | %8s | %8s |\n", "Query", "Rep", "Avg", "Min", "Max")
+
+	keys := make([]string, 0, len(stats))
+	for k := range stats {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, k := range keys {
+		count, avg, min, max := summarizeQuery(stats[k])
+		fmt.Printf("| %50s | %8d | %8d | %8d | %8d |\n", k, count, avg, min, max)
+	}
+}
+
+func summarizeQuery(v []int64) (int64, int64, int64, int64) {
+	var sumTimer int64
+	var minTimer = int64(999999999)
+	var maxTimer = int64(-1)
+	for _, p := range v {
+		sumTimer += p
+		minTimer = min(minTimer, p)
+		maxTimer = max(maxTimer, p)
+	}
+
+	count := int64(len(v))
+
+	return count, sumTimer / count, minTimer, maxTimer
 }
