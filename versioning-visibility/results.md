@@ -520,3 +520,106 @@ Run 9: increased         NumTQsInFilter      = 20
 Run 10: added the NS filter back. Could not handle for more than 10 sec, with bellow latency:
 
 FullQ RPS: 6     Full Q Avg microSec: 3997407    ShardQ RPS: 166         ShardQ Avg microSec: 2183277
+
+
+Run 11: query and insert at the same time
+
+        QueryRPS        = 100                                                                                               
+        InsertRPS       = 100                                                                                               
+        InsertWorkers   = 10                                                                                                
+        InsertBatchSize = 10                                                                                                
+                                                                                                                            
+        OpenFilterRatio         = .6                                                                                        
+        BuildIdNonexistentRatio = .2                                                                                        
+                                                                                                                            
+        TQFilterRatio  = .3                                                                                                 
+        TQExcludeRatio = .5                                                                                                 
+                                                                                                                            
+        NumBuildIdsInFilter = 10                                                                                            
+        NumTQsInFilter      = 4                                                                                             
+                                                                                                                            
+        NumShards = 20         
+FullQ RPS: 31    Full Q Avg microSec: 30436      ShardQ RPS: 101         ShardQ Avg microSec: 15432      Doc Insert RPS: 100
+
+|                                              Query |      Rep |      Avg |      Min |      Max |
+|                             Full--All-AllTQs-Empty |      376 |    27103 |    10064 |    80586 |
+|                         Full--All-ExcludeTQs-Empty |       64 |    29630 |    12602 |   144506 |
+|                         Full--All-IncludeTQs-Empty |       81 |    31259 |    11946 |   115526 |
+|                            Full--Open-AllTQs-Empty |      511 |    30949 |     9326 |   111014 |
+|                        Full--Open-ExcludeTQs-Empty |      111 |    33621 |    18962 |    70753 |
+|                        Full--Open-IncludeTQs-Empty |       96 |    36924 |    19104 |   112996 |
+|                            Shard--All-AllTQs-Empty |      376 |    15720 |     5697 |    85178 |
+|                         Shard--All-AllTQs-NonEmpty |     1306 |    15574 |     5026 |    60009 |
+|                        Shard--All-ExcludeTQs-Empty |       64 |    15501 |     5989 |    36100 |
+|                     Shard--All-ExcludeTQs-NonEmpty |      281 |    15978 |     5371 |    59768 |
+|                        Shard--All-IncludeTQs-Empty |       81 |    15925 |     5850 |    29125 |
+|                     Shard--All-IncludeTQs-NonEmpty |      306 |    15390 |     5212 |    75600 |
+|                           Shard--Open-AllTQs-Empty |      513 |    16092 |     4718 |    65293 |
+|                        Shard--Open-AllTQs-NonEmpty |     2023 |    15051 |     4563 |    55361 |
+|                       Shard--Open-ExcludeTQs-Empty |      111 |    16244 |     6407 |    26856 |
+|                    Shard--Open-ExcludeTQs-NonEmpty |      374 |    14785 |     4996 |    35542 |
+|                       Shard--Open-IncludeTQs-Empty |       97 |    17298 |     6861 |    33911 |
+|                    Shard--Open-IncludeTQs-NonEmpty |      379 |    15228 |     5145 |    47530 |
+
+
+Run 12: increase both RPS to 300
+
+QueryRPS        = 300                                                                                               
+InsertRPS       = 300                                                                                               
+InsertWorkers   = 10                                                                                                
+InsertBatchSize = 30
+
+FullQ RPS: 44    Full Q Avg microSec: 54798      ShardQ RPS: 298         ShardQ Avg microSec: 26124      Doc Insert RPS: 297
+
+|                                              Query |      Rep |      Avg |      Min |      Max |
+|                             Full--All-AllTQs-Empty |      991 |    52161 |    13395 |   440338 |
+|                         Full--All-ExcludeTQs-Empty |      231 |    58725 |    21788 |   417738 |
+|                         Full--All-IncludeTQs-Empty |      233 |    53811 |    21062 |   357023 |
+|                            Full--Open-AllTQs-Empty |     1560 |    54025 |     9693 |   420561 |
+|                        Full--Open-ExcludeTQs-Empty |      305 |    58918 |    19065 |   329256 |
+|                        Full--Open-IncludeTQs-Empty |      323 |    60624 |    22908 |   411181 |
+|                            Shard--All-AllTQs-Empty |      991 |    25722 |     6098 |   193424 |
+|                         Shard--All-AllTQs-NonEmpty |     4055 |    26255 |     5218 |   243317 |
+|                        Shard--All-ExcludeTQs-Empty |      231 |    29836 |    13549 |   197780 |
+|                     Shard--All-ExcludeTQs-NonEmpty |      848 |    25907 |     5321 |   225339 |
+|                        Shard--All-IncludeTQs-Empty |      233 |    26230 |     6754 |   163612 |
+|                     Shard--All-IncludeTQs-NonEmpty |      792 |    26279 |     5423 |   300146 |
+|                           Shard--Open-AllTQs-Empty |     1560 |    27081 |     6285 |   316610 |
+|                        Shard--Open-AllTQs-NonEmpty |     6012 |    25775 |     4761 |   292774 |
+|                       Shard--Open-ExcludeTQs-Empty |      305 |    28413 |     6973 |   396503 |
+|                    Shard--Open-ExcludeTQs-NonEmpty |     1318 |    25994 |     5668 |   242638 |
+|                       Shard--Open-IncludeTQs-Empty |      323 |    27833 |     8453 |   206771 |
+|                    Shard--Open-IncludeTQs-NonEmpty |     1205 |    24958 |     5783 |   191257 |
+
+
+Run 13: could not handle 500 RPS for more than 10 secs
+
+QueryRPS        = 500                                                                                               
+InsertRPS       = 500                                                                                               
+InsertWorkers   = 10                                                                                                
+InsertBatchSize = 50      
+
+
+Run 14: RPS 400 without NS filter
+
+FullQ RPS: 67    Full Q Avg microSec: 128337     ShardQ RPS: 399         ShardQ Avg microSec: 57307      Doc Insert RPS: 397
+
+|                                              Query |      Rep |      Avg |      Min |      Max |
+|                             Full--All-AllTQs-Empty |      960 |   127757 |    26594 |  1758604 |
+|                         Full--All-ExcludeTQs-Empty |      211 |   141495 |    23458 |  1249479 |
+|                         Full--All-IncludeTQs-Empty |      216 |   124087 |    26757 |  1174309 |
+|                            Full--Open-AllTQs-Empty |     1705 |   121346 |     8672 |  1656101 |
+|                        Full--Open-ExcludeTQs-Empty |      355 |   146967 |    23344 |  1188703 |
+|                        Full--Open-IncludeTQs-Empty |      355 |   139621 |    25993 |  1939247 |
+|                            Shard--All-AllTQs-Empty |     1301 |    59579 |     6174 |  1044242 |
+|                         Shard--All-AllTQs-NonEmpty |     5254 |    58071 |     5998 |  1230858 |
+|                        Shard--All-ExcludeTQs-Empty |      270 |    63842 |    13410 |   828194 |
+|                     Shard--All-ExcludeTQs-NonEmpty |     1155 |    56328 |     6569 |   853838 |
+|                        Shard--All-IncludeTQs-Empty |      315 |    57563 |    10240 |   635850 |
+|                     Shard--All-IncludeTQs-NonEmpty |     1138 |    60506 |     8986 |   944821 |
+|                           Shard--Open-AllTQs-Empty |     2012 |    57394 |     5660 |   710868 |
+|                        Shard--Open-AllTQs-NonEmpty |     8030 |    57029 |     5055 |  1031151 |
+|                       Shard--Open-ExcludeTQs-Empty |      413 |    62294 |    12811 |   899451 |
+|                    Shard--Open-ExcludeTQs-NonEmpty |     1767 |    52654 |     5999 |   715613 |
+|                       Shard--Open-IncludeTQs-Empty |      423 |    65443 |     7202 |   648661 |
+|                    Shard--Open-IncludeTQs-NonEmpty |     1705 |    53455 |     7625 |   718219 |
