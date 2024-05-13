@@ -19,8 +19,8 @@ var exp experiment.Experiment
 var activityWait time.Duration
 
 func main() {
-	c, _ := experiment.NewLocalClient("backlog_exp")
-	//c, _ := farewell.NewCloudClient("shahab-test")
+	//c, _ := experiment.NewLocalClient("backlog_exp")
+	c, _ := experiment.NewCloudClient("shahab-test2")
 	defer c.Close()
 
 	expName = os.Args[1]
@@ -63,12 +63,14 @@ func startWf(c client.Client) {
 }
 
 func runWorker(c client.Client) {
-	w := worker.New(c, "tq", worker.Options{
-		MaxConcurrentActivityExecutionSize:     exp.ConcurrentActivities,
-		MaxConcurrentActivityTaskPollers:       exp.ConcurrentPollers,
-		MaxConcurrentWorkflowTaskPollers:       200,
-		MaxConcurrentWorkflowTaskExecutionSize: 2000,
-	})
+	w := worker.New(
+		c, "tq", worker.Options{
+			MaxConcurrentActivityExecutionSize:     exp.ConcurrentActivities,
+			MaxConcurrentActivityTaskPollers:       exp.ConcurrentPollers,
+			MaxConcurrentWorkflowTaskPollers:       200,
+			MaxConcurrentWorkflowTaskExecutionSize: 2000,
+		},
+	)
 
 	w.RegisterWorkflow(MyWorkflow)
 	w.RegisterActivity(MyActivity)

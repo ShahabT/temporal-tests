@@ -1,4 +1,4 @@
-package experiment
+package temporal_tests
 
 import (
 	"crypto/tls"
@@ -13,7 +13,8 @@ func NewCloudClient(namespace string) (client.Client, error) {
 	}
 	namespace += ".temporal-dev"
 
-	cloudHostPort := "tmprl-test.cloud:7233" //os.Getenv("TEMPORAL_CLOUD")
+	//cloudHostPort := os.Getenv("TEMPORAL_CLOUD")
+	cloudHostPort := "tmprl-test.cloud:7233"
 
 	if cloudHostPort == "" {
 		log.Fatalln("TEMPORAL_CLOUD env var is not set")
@@ -31,15 +32,13 @@ func NewCloudClient(namespace string) (client.Client, error) {
 		log.Fatalln("Unable to load cert and key pair.", err)
 	}
 	// Add the cert to the tls certificates in the ConnectionOptions of the Client
-	c, err := client.Dial(
-		client.Options{
-			HostPort:  hostPort,
-			Namespace: namespace,
-			ConnectionOptions: client.ConnectionOptions{
-				TLS: &tls.Config{Certificates: []tls.Certificate{cert}},
-			},
+	c, err := client.Dial(client.Options{
+		HostPort:  hostPort,
+		Namespace: namespace,
+		ConnectionOptions: client.ConnectionOptions{
+			TLS: &tls.Config{Certificates: []tls.Certificate{cert}},
 		},
-	)
+	})
 
 	if err != nil {
 		log.Fatalln("Unable to create client", err)
@@ -48,11 +47,9 @@ func NewCloudClient(namespace string) (client.Client, error) {
 }
 
 func NewLocalClient(namespace string) (client.Client, error) {
-	c, err := client.Dial(
-		client.Options{
-			Namespace: namespace,
-		},
-	)
+	c, err := client.Dial(client.Options{
+		Namespace: namespace,
+	})
 	if err != nil {
 		log.Fatalln("Unable to create client", err)
 	}
